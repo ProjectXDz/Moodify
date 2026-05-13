@@ -251,7 +251,7 @@ footer{margin-top:auto;padding-top:3rem;text-align:center;font-size:.72rem;color
         <svg viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></svg>
       </button>
     </div>
-    <p class="free-note">✦ Multi-AI powered · Completely free · No sign-up · Music by Jamendo</p>
+    <p class="free-note">✦ Powered by Groq (Ultra-fast AI) · Completely free · No sign-up · Music by Jamendo</p>
     <div class="err" id="err"></div>
   </section>
 
@@ -303,7 +303,7 @@ footer{margin-top:auto;padding-top:3rem;text-align:center;font-size:.72rem;color
     <button class="pill" data-t="I feel lonely and a bit empty inside">😶 I feel lonely</button>
   </div>
 
-  <footer>MoodAI · Powered by <a href="https://pollinations.ai" target="_blank" style="color:rgba(196,181,253,.5);text-decoration:none">Pollinations.AI</a>, <a href="https://openai.com" target="_blank" style="color:rgba(196,181,253,.5);text-decoration:none">OpenAI</a>, <a href="https://groq.com" target="_blank" style="color:rgba(196,181,253,.5);text-decoration:none">Groq</a> + <a href="https://jamendo.com" target="_blank" style="color:rgba(196,181,253,.5);text-decoration:none">Jamendo</a></footer>
+  <footer>MoodAI · Powered by <a href="https://groq.com" target="_blank" style="color:rgba(196,181,253,.5);text-decoration:none">Groq</a>, <a href="https://openai.com" target="_blank" style="color:rgba(196,181,253,.5);text-decoration:none">OpenAI</a>, <a href="https://anthropic.com" target="_blank" style="color:rgba(196,181,253,.5);text-decoration:none">Anthropic</a> + <a href="https://jamendo.com" target="_blank" style="color:rgba(196,181,253,.5);text-decoration:none">Jamendo</a></footer>
 </div>
 
 <audio id="aud" crossorigin="anonymous" preload="none"></audio>
@@ -313,22 +313,16 @@ const JAMENDO_ID_DEFAULT = 'c17b8d45';
 
 // Provider configs
 const PROVIDERS = {
-  pollinations: {
-    name: 'Pollinations.ai',
+  groq: {
+    name: 'Groq',
     free: true,
-    note: 'GPT-4o quality · Completely free',
-    requiresKey: false
+    note: 'Ultra-fast · FREE tier · Mixtral-8x7b',
+    requiresKey: true
   },
   openai: {
     name: 'OpenAI',
     free: false,
     note: '$0.15 per 1M tokens · GPT-4o-mini',
-    requiresKey: true
-  },
-  groq: {
-    name: 'Groq',
-    free: true,
-    note: 'Ultra-fast · Mixtral-8x7b · Free tier',
     requiresKey: true
   },
   anthropic: {
@@ -340,7 +334,7 @@ const PROVIDERS = {
   huggingface: {
     name: 'HuggingFace',
     free: true,
-    note: 'Mistral-7B · Free inference',
+    note: 'Mistral-7B · FREE inference',
     requiresKey: true
   }
 };
@@ -372,7 +366,7 @@ function closeSettings(){$('modal').classList.remove('on')}
 function renderProviders(){
   const list=$('provList');
   list.innerHTML='';
-  const curr=localStorage.getItem('aiProvider')||'pollinations';
+  const curr=localStorage.getItem('aiProvider')||'groq';
   Object.entries(PROVIDERS).forEach(([k,v])=>{
     const div=document.createElement('div');
     div.className='prov-opt'+(curr===k?' sel':'');
@@ -403,13 +397,13 @@ function selectProvider(p){
   updateKeyGroup();
 }
 function updateKeyGroup(){
-  const prov=localStorage.getItem('aiProvider')||'pollinations';
+  const prov=localStorage.getItem('aiProvider')||'groq';
   const cfg=PROVIDERS[prov];
   const group=$('keyGroup');
   const desc=$('keyDesc');
   if(cfg.requiresKey){
     group.style.display='block';
-    if(prov==='openai') desc.innerHTML='Get free from <a href="https://platform.openai.com" target="_blank" style="color:#c4b5fd">platform.openai.com</a>';
+    if(prov==='openai') desc.innerHTML='Get free credits from <a href="https://platform.openai.com" target="_blank" style="color:#c4b5fd">platform.openai.com</a>';
     else if(prov==='groq') desc.innerHTML='Get free from <a href="https://console.groq.com" target="_blank" style="color:#c4b5fd">console.groq.com</a>';
     else if(prov==='anthropic') desc.innerHTML='Get from <a href="https://console.anthropic.com" target="_blank" style="color:#c4b5fd">console.anthropic.com</a>';
     else if(prov==='huggingface') desc.innerHTML='Get from <a href="https://huggingface.co/settings/tokens" target="_blank" style="color:#c4b5fd">huggingface.co</a>';
@@ -420,7 +414,7 @@ function updateKeyGroup(){
   $('jamendoKey').value=localStorage.getItem('jamendoKey')||'';
 }
 function saveSettings(){
-  const prov=localStorage.getItem('aiProvider')||'pollinations';
+  const prov=localStorage.getItem('aiProvider')||'groq';
   const cfg=PROVIDERS[prov];
   if(cfg.requiresKey){
     const key=$('apiKey').value.trim();
@@ -436,24 +430,24 @@ function saveSettings(){
 
 // AI backends
 async function callAI(text){
-  const prov=localStorage.getItem('aiProvider')||'pollinations';
+  const prov=localStorage.getItem('aiProvider')||'groq';
   const cfg=PROVIDERS[prov];
-  const key=cfg.requiresKey?localStorage.getItem('aiKey_'+prov):'';
+  const key=localStorage.getItem('aiKey_'+prov)||'';
   
-  if(prov==='pollinations') return await callPollinations(text);
+  if(prov==='groq') return await callGroq(text,key);
   else if(prov==='openai'&&key) return await callOpenAI(text,key);
-  else if(prov==='groq'&&key) return await callGroq(text,key);
   else if(prov==='anthropic'&&key) return await callAnthropic(text,key);
   else if(prov==='huggingface'&&key) return await callHuggingFace(text,key);
-  else throw new Error('Provider not configured');
+  else throw new Error('Please add your API key in Settings (⚙️)');
 }
 
-async function callPollinations(text){
-  const r=await fetch('https://gen.pollinations.ai/v1/chat/completions',{
+async function callGroq(text,key){
+  if(!key) throw new Error('Please add your Groq API key in Settings. Get free at console.groq.com');
+  const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{
     method:'POST',
-    headers:{'Content-Type':'application/json'},
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
     body:JSON.stringify({
-      model:'gpt-4o',
+      model:'mixtral-8x7b-32768',
       messages:[
         {role:'system',content:`You are an empathetic AI mood analyst. Reply ONLY with valid JSON (no markdown):
 {"mood":"<happy|sad|calm|stressed|anxious|excited|angry|lonely|neutral>","headline":"<10 words max>","suggestion":"<1-2 warm sentences>","tags":["<tag1>","<tag2>","<tag3>"]}`},
@@ -462,9 +456,9 @@ async function callPollinations(text){
       temperature:0.7
     })
   });
-  if(!r.ok) throw new Error('Pollinations unavailable – refresh page or try again');
+  if(!r.ok){const e=await r.json();throw new Error(e.error?.message||'Groq error')}
   const d=await r.json();
-  const raw=(d.choices?.[0]?.message?.content||'').replace(/```json|```/g,'').trim();
+  const raw=d.choices[0].message.content.replace(/```json|```/g,'').trim();
   return JSON.parse(raw);
 }
 
@@ -485,25 +479,6 @@ async function callOpenAI(text,key){
   if(!r.ok){const e=await r.json();throw new Error(e.error?.message||'OpenAI error')}
   const d=await r.json();
   return JSON.parse(d.choices[0].message.content);
-}
-
-async function callGroq(text,key){
-  const r=await fetch('https://api.groq.com/openai/v1/chat/completions',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-    body:JSON.stringify({
-      model:'mixtral-8x7b-32768',
-      messages:[
-        {role:'system',content:`You are an empathetic AI mood analyst. Reply ONLY with valid JSON:
-{"mood":"<happy|sad|calm|stressed|anxious|excited|angry|lonely|neutral>","headline":"<10 words max>","suggestion":"<1-2 warm sentences>","tags":["<tag1>","<tag2>","<tag3>"]}`},
-        {role:'user',content:text}
-      ]
-    })
-  });
-  if(!r.ok) throw new Error('Groq error');
-  const d=await r.json();
-  const raw=d.choices[0].message.content.replace(/```json|```/g,'').trim();
-  return JSON.parse(raw);
 }
 
 async function callAnthropic(text,key){
